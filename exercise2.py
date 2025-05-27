@@ -107,15 +107,15 @@ def main():
         alpha=0.2,
         label="Uncertainty Bounds (2 std)",
     )
+    plt.plot(x_test, y_clean_test, label="True Function", color="green")
     plt.fill_between(
         x_test,
         lower_bound_real,
         upper_bound_real,
         color="red",
         alpha=0.2,
-        label="Uncertainty Bounds Real (2 std)",
+        label="True Uncertainty Bounds (2 std)",
     )
-    plt.plot(x_test, y_clean_test, label="True Function", color="green")
     plt.plot(x_train, y_train, "o", label="Training Data")
     plt.title("Bayesian Neural Network Predictions with Uncertainty")
     plt.xlabel("Input")
@@ -159,15 +159,15 @@ def main():
         alpha=0.2,
         label="Uncertainty Bounds (2 std)",
     )
+    plt.plot(x_test, y_test_clean, label="True Function", color="green")
     plt.fill_between(
         x_test,
         lower_bound_real,
         upper_bound_real,
         color="red",
         alpha=0.2,
-        label="Uncertainty Bounds (2 std)",
+        label="True Uncertainty Bounds (2 std)",
     )
-    plt.plot(x_test, y_test_clean, label="True Function", color="green")
     plt.plot(x_train, y_train, "o", label="Training Data")
     plt.title("Bayesian Neural Network Predictions with Uncertainty")
     plt.xlabel("Input")
