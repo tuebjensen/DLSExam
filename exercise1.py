@@ -1,17 +1,17 @@
-from math import log2
 import os
-from turtle import title
-from torch import nn, optim
+from math import log2
+
+import matplotlib.pyplot as plt
+import networkx as nx
+import numpy as np
 import torch
+from scipy.stats import pearsonr
+from sklearn.preprocessing import MinMaxScaler
+from torch import nn, optim
 from torch.nn.functional import relu
+from torch_geometric.datasets import Airports, KarateClub
 from torch_geometric.nn import GCNConv
 from torch_geometric.utils import to_networkx
-from torch_geometric.datasets import KarateClub, Airports
-import numpy as np
-import networkx as nx
-from sklearn.preprocessing import MinMaxScaler
-import matplotlib.pyplot as plt
-from scipy.stats import pearsonr
 
 
 def connectivity_entropy(graph: nx.Graph) -> float:
