@@ -24,7 +24,8 @@ def generate_data(device="cpu", lower=0.0, upper=1.0, num_samples=100):
     # Generate synthetic training data with a sine wave and gaussian noise with variance of 0.1
     x = np.linspace(lower, upper, num_samples)
     sine_wave = np.sin(2 * np.pi * x)
-    noised_sine_wave = sine_wave + np.random.normal(0, 0.1, num_samples)
+    noised_sine_wave = sine_wave + np.random.normal(0, np.sqrt(0.1), num_samples)
+
     x = torch.tensor(x, dtype=torch.float32).unsqueeze(-1).to(device)
     noised_sine_wave = (
         torch.tensor(noised_sine_wave, dtype=torch.float32).unsqueeze(-1).to(device)
@@ -68,37 +69,53 @@ def main():
     plt.grid()
     plt.savefig("plots/exercise2_training_loss.png", bbox_inches="tight")
 
-    x_test, _, _ = generate_data(device, num_samples=1000)
+    x_test, _, y_clean_test = generate_data(device, num_samples=1000)
     model.eval()
     with torch.no_grad():
         mean_pred, var_pred = model(x_test)
 
-    mean_pred = mean_pred.squeeze().cpu().numpy()
-    var_pred = var_pred.squeeze().cpu().numpy()
-    x_train = x_train.squeeze().cpu().numpy()
-    y_train = y_train.squeeze().cpu().numpy()
-    x_test = x_test.squeeze().cpu().numpy()
+    if device == "cuda":
+        mean_pred = mean_pred.cpu()
+        var_pred = var_pred.cpu()
+        x_train = x_train.cpu()
+        y_train = y_train.cpu()
+        x_test = x_test.cpu()
+    mean_pred = mean_pred.squeeze().numpy()
+    var_pred = var_pred.squeeze().numpy()
+    x_train = x_train.squeeze().numpy()
+    y_train = y_train.squeeze().numpy()
+    x_test = x_test.squeeze().numpy()
     std_pred = np.sqrt(var_pred)
     lower_bound = mean_pred - 2 * std_pred
     upper_bound = mean_pred + 2 * std_pred
-
+    std_real = np.sqrt(0.1)  # The noise variance is 0.1, so the std is sqrt(0.1)
+    lower_bound_real = y_clean_test - 2 * std_real
+    upper_bound_real = y_clean_test + 2 * std_real
     # Plot the predictions with uncertainty bounds
     plt.figure(figsize=(10, 5))
     plt.plot(
         x_test,
         mean_pred,
         label="Predicted Mean",
-        color="orange",
+        color="black",
     )
     plt.fill_between(
         x_test,
         lower_bound,
         upper_bound,
-        color="lightblue",
-        alpha=0.5,
+        color="blue",
+        alpha=0.2,
         label="Uncertainty Bounds (2 std)",
     )
-    plt.plot(x_train, y_clean, label="True Function", color="green")
+    plt.fill_between(
+        x_test,
+        lower_bound_real,
+        upper_bound_real,
+        color="red",
+        alpha=0.2,
+        label="Uncertainty Bounds Real (2 std)",
+    )
+    plt.plot(x_test, y_clean_test, label="True Function", color="green")
     plt.plot(x_train, y_train, "o", label="Training Data")
     plt.title("Bayesian Neural Network Predictions with Uncertainty")
     plt.xlabel("Input")
@@ -113,27 +130,41 @@ def main():
     with torch.no_grad():
         mean_pred, var_pred = model(x_test)
 
-    mean_pred = mean_pred.squeeze().cpu().numpy()
-    var_pred = var_pred.squeeze().cpu().numpy()
-    x_test = x_test.squeeze().cpu().numpy()
+    if device == "cuda":
+        mean_pred = mean_pred.cpu()
+        var_pred = var_pred.cpu()
+        x_test = x_test.cpu()
+
+    mean_pred = mean_pred.squeeze().numpy()
+    var_pred = var_pred.squeeze().numpy()
+    x_test = x_test.squeeze().numpy()
     std_pred = np.sqrt(var_pred)
     lower_bound = mean_pred - 2 * std_pred
     upper_bound = mean_pred + 2 * std_pred
-
+    lower_bound_real = y_test_clean - 2 * std_real
+    upper_bound_real = y_test_clean + 2 * std_real
     # Plot the predictions with uncertainty bounds
     plt.figure(figsize=(10, 5))
     plt.plot(
         x_test,
         mean_pred,
         label="Predicted Mean",
-        color="orange",
+        color="black",
     )
     plt.fill_between(
         x_test,
         lower_bound,
         upper_bound,
-        color="lightblue",
-        alpha=0.5,
+        color="blue",
+        alpha=0.2,
+        label="Uncertainty Bounds (2 std)",
+    )
+    plt.fill_between(
+        x_test,
+        lower_bound_real,
+        upper_bound_real,
+        color="red",
+        alpha=0.2,
         label="Uncertainty Bounds (2 std)",
     )
     plt.plot(x_test, y_test_clean, label="True Function", color="green")
