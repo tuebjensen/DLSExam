@@ -5,6 +5,7 @@ from collections import deque, namedtuple
 from itertools import count
 
 import gymnasium as gym
+from gymnasium.wrappers import RecordVideo
 import matplotlib.pyplot as plt
 import torch
 import torch.nn as nn
@@ -211,8 +212,53 @@ def main():
             # Move to the next state
             state = next_state
 
+        if (
+            # make sure the moving average is pretty close to 500
+            [duration >= 499 for duration in episode_durations[-110:]].count(True)
+            >= 100
+            # and that the current episode shows ideal performance
+            and episode_durations[-1] >= 499
+            # and that we have enough episodes for the exercise
+            and i_episode + 1 >= 500
+        ):
+            print(
+                f"Environment solved in {i_episode + 1} episodes! Average duration: {sum(episode_durations[-100:]) / 100:.2f}"
+            )
+            break
+    env.close()
+
     print("Complete")
     plot_durations(episode_durations)
+
+    # save weights
+    os.makedirs("weights", exist_ok=True)
+    torch.save(dqn_agent.policy_net.state_dict(), "weights/exercise3_policy_net.pth")
+    torch.save(dqn_agent.target_net.state_dict(), "weights/exercise3_target_net.pth")
+
+    # create videos
+    env = gym.make("CartPole-v1", render_mode="rgb_array")
+    env = RecordVideo(
+        env, "videos", episode_trigger=lambda x: True, name_prefix="exercise3"
+    )
+    state, info = env.reset()
+    for i_episode in range(3):
+        state, info = env.reset()
+        state = torch.tensor(state, dtype=torch.float32, device=device).unsqueeze(0)
+        for t in count():
+            action = dqn_agent.select_action(state)
+            observation, reward, terminated, truncated, _ = env.step(action.item())
+            done = terminated or truncated
+
+            if done:
+                break
+
+            # Move to the next state
+            state = torch.tensor(
+                observation, dtype=torch.float32, device=device
+            ).unsqueeze(0)
+
+    env.close()
+    print("Video saved to 'videos/exercise3*.mp4'")
 
 
 if __name__ == "__main__":
