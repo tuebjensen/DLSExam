@@ -18,8 +18,7 @@ def connectivity_entropy(graph: nx.Graph) -> float:
     sum = 0
     for node in graph.nodes():
         chi = graph.degree[node] / (2 * graph.number_of_edges())
-        chi = chi if chi > 0 else 0.01 / (2 * graph.number_of_nodes())
-        sum += chi * log2(chi)
+        sum += chi * log2(chi) if chi > 0 else 0  # lim chi->0 chi*log2(chi) = 0
     return -sum
 
 
@@ -51,6 +50,11 @@ def main():
     # Load the Karate Club dataset
     dataset = KarateClub()
     graph: nx.Graph = to_networkx(dataset[0])
+
+    # Plot the graph
+    nx.draw(graph, with_labels=True, node_color="lightblue", edge_color="gray")
+    plt.savefig("plots/exercise1_karate_club_graph.png", bbox_inches="tight")
+
     train_status_print_per_ep = 20
     train_eps = 500
 
@@ -138,7 +142,7 @@ def main():
     # Make a plot where it's the GCN output - target vs node index, with the largest 5 differences highlighted
     differences = target.numpy() - output.detach().numpy()
     plt.figure()
-    plt.scatter(range(num_nodes), differences, label="GCN Output - Target", marker="x")
+    plt.scatter(range(num_nodes), differences, label="Target - GCN Output", marker="x")
     plt.title("Target minus GCN Output vs Node Index")
     plt.xlabel("Node Index")
     plt.ylabel("Target - GCN Output")
